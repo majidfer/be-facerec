@@ -1,10 +1,12 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const bcrypt = require("bcrypt-nodejs");
+const cors = require("cors");
 
 const app = express();
 
 app.use(bodyParser.json());
+app.use(cors());
 // app.use(express.json());
 
 const database = {
@@ -40,7 +42,7 @@ app.post("/signin", (req, res) => {
 
   validEmail && validPass
     ? res.send("signing in")
-    : res.send("error on signing in");
+    : res.status.send("error on signing in");
 });
 
 app.post("/register", (req, res) => {
