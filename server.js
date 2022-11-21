@@ -1,5 +1,6 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const bcrypt = require("bcrypt-nodejs");
 
 const app = express();
 
@@ -32,32 +33,35 @@ app.get("/", (req, res) => {
 });
 
 app.post("/signin", (req, res) => {
-  if (
-    req.body.email === database.users[0].email &&
-    req.body.password === database.users[0].password
-  ) {
-    res.send("signing in");
-  } else {
-    res.send("error on signing in");
-  }
+  const { email, password } = req.body;
+
+  const validEmail = email === database.users[2].email;
+  const validPass = bcrypt.compareSync(password, database.users[2].password);
+
+  validEmail && validPass
+    ? res.send("signing in")
+    : res.send("error on signing in");
 });
 
 app.post("/register", (req, res) => {
   const { name, email, password } = req.body;
-  database.users.push({
-    id: "125",
-    name: name,
-    email: email,
-    password: password,
-    entries: 0,
-    joined: new Date(),
+  bcrypt.hash(password, null, null, function (err, hash) {
+    // Store hash in your password DB.
+    database.users.push({
+      id: "125",
+      name: name,
+      email: email,
+      password: hash,
+      entries: 0,
+      joined: new Date(),
+    });
+    res.json(database.users[database.users.length - 1]);
   });
-  res.json(database.users[database.users.length - 1]);
 });
 
 app.post("/profile/:id", (req, res) => {
   const { id } = req.params;
-  const user = database.users.filter(user => user.id === id);
+  const user = database.users.filter((user) => user.id === id);
   if (user.length !== 0) {
     res.send(user[0]);
   } else {
@@ -67,14 +71,14 @@ app.post("/profile/:id", (req, res) => {
 
 app.put("/image", (req, res) => {
   const { id } = req.body;
-  const user = database.users.filter(user => user.id === id);
+  const user = database.users.filter((user) => user.id === id);
   if (user.length !== 0) {
     user[0].entries++;
     res.json(user[0].entries);
   } else {
     res.json("some error occured");
   }
-})
+});
 
 app.listen(3000, () => {
   console.log(`Server is up and listening on port 3000`);
