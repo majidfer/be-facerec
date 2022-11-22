@@ -42,7 +42,7 @@ app.post("/signin", (req, res) => {
   const validPass = password === database.users[0].password;
 
   validEmail && validPass
-    ? res.json("signing in")
+    ? res.json(database.users[0])
     : res.status(400).json("error in signing in");
 });
 
