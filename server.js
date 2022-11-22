@@ -14,7 +14,7 @@ const database = {
     {
       id: "123",
       name: "feri",
-      email: "feri@gmail.com",
+      email: "ferialfahri@gmail.com",
       password: "heroku",
       entries: 0,
       joined: new Date(),
@@ -37,18 +37,19 @@ app.get("/", (req, res) => {
 app.post("/signin", (req, res) => {
   const { email, password } = req.body;
 
-  const validEmail = email === database.users[2].email;
-  const validPass = bcrypt.compareSync(password, database.users[2].password);
+  const validEmail = email === database.users[0].email;
+  // const validPass = bcrypt.compareSync(password, database.users[2].password);
+  const validPass = password === database.users[0].password;
 
   validEmail && validPass
-    ? res.send("signing in")
-    : res.status.send("error on signing in");
+    ? res.json("signing in")
+    : res.status(400).json("error in signing in");
 });
 
 app.post("/register", (req, res) => {
   const { name, email, password } = req.body;
   bcrypt.hash(password, null, null, function (err, hash) {
-    // Store hash in your password DB.
+    // Store hash in your password DB. 
     database.users.push({
       id: "125",
       name: name,
