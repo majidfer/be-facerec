@@ -71,9 +71,9 @@ app.post("/register", (req, res) => {
       email: email,
       joined: new Date(),
     })
-    .then((response) => {
-      if (response) {
-        res.json(response[0]);
+    .then((user) => {
+      if (user) {
+        res.json(user[0]);
       }
     })
     .catch((error) => res.status(400).json("registering error"));
@@ -81,23 +81,31 @@ app.post("/register", (req, res) => {
 
 app.post("/profile/:id", (req, res) => {
   const { id } = req.params;
-  const user = database.users.filter((user) => user.id === id);
-  if (user.length !== 0) {
-    res.send(user[0]);
-  } else {
-    res.send("user not found");
-  }
+  db("users")
+    .select("*")
+    .where("id", id)
+    .then((user) => {
+      if (user.length > 0) {
+        res.json(user[0]);
+      } else {
+        res.json("no user found");
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 });
 
 app.put("/image", (req, res) => {
   const { id } = req.body;
-  const user = database.users.filter((user) => user.id === id);
-  if (user.length !== 0) {
-    user[0].entries++;
-    res.json(user[0].entries);
-  } else {
-    res.json("some error occured");
-  }
+  db("users")
+    .where("id", "=", id)
+    .increment("entries", 1)
+    .returning("entries")
+    .then((entries) => res.json(entries[0].entries))
+    .catch((err) => {
+      res.status(400).json("some error occured");
+    });
 });
 
 app.listen(3000, () => {
