@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const bcrypt = require("bcrypt-nodejs");
+const knex = require("knex");
 const cors = require("cors");
 
 const app = express();
@@ -8,6 +9,16 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 // app.use(express.json());
+
+const db = knex({
+  client: "pg",
+  connection: {
+    host: "127.0.0.1",
+    user: "feri",
+    password: "mysecretword123",
+    database: "facerec",
+  },
+});
 
 const database = {
   users: [
@@ -31,7 +42,12 @@ const database = {
 };
 
 app.get("/", (req, res) => {
-  res.send(database.users);
+  // res.send(database.users);
+  db.select("*")
+    .from("users")
+    .then((users) => {
+      res.send(users);
+    });
 });
 
 app.post("/signin", (req, res) => {
@@ -47,19 +63,20 @@ app.post("/signin", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  const { name, email, password } = req.body;
-  bcrypt.hash(password, null, null, function (err, hash) {
-    // Store hash in your password DB. 
-    database.users.push({
-      id: "125",
+  const { name, email } = req.body;
+  db("users")
+    .returning("*")
+    .insert({
       name: name,
       email: email,
-      password: hash,
-      entries: 0,
       joined: new Date(),
-    });
-    res.json(database.users[database.users.length - 1]);
-  });
+    })
+    .then((response) => {
+      if (response) {
+        res.json(response[0]);
+      }
+    })
+    .catch((error) => res.status(400).json("registering error"));
 });
 
 app.post("/profile/:id", (req, res) => {
