@@ -8,7 +8,6 @@ const app = express();
 
 app.use(bodyParser.json());
 app.use(cors());
-// app.use(express.json());
 
 const db = knex({
   client: "pg",
@@ -20,63 +19,72 @@ const db = knex({
   },
 });
 
-const database = {
-  users: [
-    {
-      id: "123",
-      name: "feri",
-      email: "ferialfahri@gmail.com",
-      password: "heroku",
-      entries: 0,
-      joined: new Date(),
-    },
-    {
-      id: "124",
-      name: "ayu",
-      email: "ayu@gmail.com",
-      password: "supersekali",
-      entries: 0,
-      joined: new Date(),
-    },
-  ],
-};
-
 app.get("/", (req, res) => {
-  // res.send(database.users);
-  db.select("*")
-    .from("users")
-    .then((users) => {
-      res.send(users);
-    });
+  db("users")
+    .count("email")
+    .then((data) => res.json(`${data[0].count} user(s) registered`));
 });
 
 app.post("/signin", (req, res) => {
   const { email, password } = req.body;
 
-  const validEmail = email === database.users[0].email;
-  // const validPass = bcrypt.compareSync(password, database.users[2].password);
-  const validPass = password === database.users[0].password;
+  db.select("hash")
+    .from("login")
+    .where("email", "=", email)
+    .then((data) => {
+      if (data) {
+        const isPasswordValid = bcrypt.compareSync(password, data[0].hash);
+        if (isPasswordValid) {
+          db.select("*")
+            .from("users")
+            .where("email", "=", email)
+            .then((user) => res.json(user[0]));
+        } else {
+          res.status(400).json("Username and password doesn't match!");
+        }
+      }
+    })
+    .catch((err) => {
+      res.status(400).json("Error signing in");
+    });
 
-  validEmail && validPass
-    ? res.json(database.users[0])
-    : res.status(400).json("error in signing in");
+  // const validEmail = email === database.users[0].email;
+  // // const validPass = bcrypt.compareSync(password, database.users[2].password);
+  // const validPass = password === database.users[0].password;
+
+  // validEmail && validPass
+  //   ? res.json(database.users[0])
+  //   : res.status(400).json("error in signing in");
 });
 
 app.post("/register", (req, res) => {
-  const { name, email } = req.body;
-  db("users")
-    .returning("*")
-    .insert({
-      name: name,
-      email: email,
-      joined: new Date(),
-    })
-    .then((user) => {
-      if (user) {
-        res.json(user[0]);
-      }
-    })
-    .catch((error) => res.status(400).json("registering error"));
+  const { name, email, password } = req.body;
+  const hash = bcrypt.hashSync(password);
+
+  db.transaction((trx) => {
+    return trx
+      .insert({ email: email, hash: hash })
+      .into("login")
+      .returning("email")
+      .then((loginEmail) => {
+        return trx("users")
+          .insert({
+            name: name,
+            email: loginEmail[0].email,
+            joined: new Date(),
+          })
+          .returning("*")
+          .then((user) => {
+            if (user) {
+              res.json(user[0]);
+            } else {
+              res.status(400).json("unable to register");
+            }
+          });
+      })
+      .then(trx.commit)
+      .catch(trx.rollback);
+  }).catch((err) => res.status(400).json("unable to register"));
 });
 
 app.post("/profile/:id", (req, res) => {
