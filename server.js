@@ -47,14 +47,6 @@ app.post("/signin", (req, res) => {
     .catch((err) => {
       res.status(400).json("Error signing in");
     });
-
-  // const validEmail = email === database.users[0].email;
-  // // const validPass = bcrypt.compareSync(password, database.users[2].password);
-  // const validPass = password === database.users[0].password;
-
-  // validEmail && validPass
-  //   ? res.json(database.users[0])
-  //   : res.status(400).json("error in signing in");
 });
 
 app.post("/register", (req, res) => {
@@ -119,11 +111,3 @@ app.put("/image", (req, res) => {
 app.listen(3000, () => {
   console.log(`Server is up and listening on port 3000`);
 });
-
-/*
-/ --> res = halo dari server
-/signin --> POST = success/fail
-/register --> POST = user
-/profile/:userId --> GET = user
-/image --> PUT --> user
-*/
