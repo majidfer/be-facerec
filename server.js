@@ -3,6 +3,7 @@ const bodyParser = require("body-parser");
 const bcrypt = require("bcrypt-nodejs");
 const knex = require("knex");
 const cors = require("cors");
+const { getTotalUsers, signIn } = require("./controllers");
 const { db } = require("./connection.js");
 
 const app = express();
@@ -10,35 +11,8 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
-app.get("/", (req, res) => {
-  db("users")
-    .count("email")
-    .then((data) => res.json(`${data[0].count} user(s) registered`));
-});
-
-app.post("/signin", (req, res) => {
-  const { email, password } = req.body;
-
-  db.select("hash")
-    .from("login")
-    .where("email", "=", email)
-    .then((data) => {
-      if (data) {
-        const isPasswordValid = bcrypt.compareSync(password, data[0].hash);
-        if (isPasswordValid) {
-          db.select("*")
-            .from("users")
-            .where("email", "=", email)
-            .then((user) => res.json(user[0]));
-        } else {
-          res.status(400).json("Username and password doesn't match!");
-        }
-      }
-    })
-    .catch((err) => {
-      res.status(400).json("Error signing in");
-    });
-});
+app.get("/", getTotalUsers);
+app.post("/signin", signIn);
 
 app.post("/register", (req, res) => {
   const { name, email, password } = req.body;
