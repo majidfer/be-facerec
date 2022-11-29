@@ -1,3 +1,4 @@
 node_modules
 test.txt
 .env
+facerec_db.sql
