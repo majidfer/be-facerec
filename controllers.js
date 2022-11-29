@@ -1,8 +1,14 @@
 const fetch = require("node-fetch");
 const dotenv = require("dotenv");
+const { ClarifaiStub, grpc } = require("clarifai-nodejs-grpc");
 
 dotenv.config();
 const { CLARIFAI_USER_ID, CLARIFAI_PAT } = process.env;
+
+const stub = ClarifaiStub.grpc();
+
+const metadata = new grpc.Metadata();
+metadata.set("authorization", `Key ${CLARIFAI_PAT}`);
 
 const {
   fetchTotalUsers,
@@ -73,6 +79,7 @@ exports.incrementEntries = (req, res) => {
     });
 };
 
+/*
 exports.handleApiCall = (req, res) => {
   const { input } = req.body;
   const USER_ID = CLARIFAI_USER_ID;
@@ -124,4 +131,35 @@ exports.handleApiCall = (req, res) => {
     .catch((err) => {
       res.status(400).json("unable to get entries");
     });
+};
+*/
+
+exports.handleApiCall = (req, res) => {
+  const { input } = req.body;
+  stub.PostModelOutputs(
+    {
+      model_id: "face-detection",
+      inputs: [{ data: { image: { url: input } } }],
+    },
+    metadata,
+    (err, response) => {
+      if (err) {
+        console.log("Error: " + err);
+        return;
+      }
+
+      if (response.status.code !== 10000) {
+        console.log(
+          "Received failed status: " +
+            response.status.description +
+            "\n" +
+            response.status.details
+        );
+        return;
+      }
+      res
+        .status(200)
+        .send(response.outputs[0].data.regions[0].region_info.bounding_box);
+    }
+  );
 };
