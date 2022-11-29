@@ -2,7 +2,7 @@ const fetch = require("node-fetch");
 const dotenv = require("dotenv");
 
 dotenv.config();
-const {CLARIFAI_USER_ID, CLARIFAI_PAT} = process.env;
+const { CLARIFAI_USER_ID, CLARIFAI_PAT } = process.env;
 
 const {
   fetchTotalUsers,
@@ -120,5 +120,8 @@ exports.handleApiCall = (req, res) => {
       res
         .status(200)
         .send(result.outputs[0].data.regions[0].region_info.bounding_box);
+    })
+    .catch((err) => {
+      res.status(400).json("unable to get entries");
     });
 };
