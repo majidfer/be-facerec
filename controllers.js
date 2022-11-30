@@ -32,7 +32,10 @@ exports.getTotalUsers = (req, res) => {
     .then((totalUser) => {
       res.status(200).json(totalUser);
     })
-    .catch((err) => res.status(400).json("something is not right"));
+    .catch((err) => {
+      console.log(err);
+      res.status(400).json("something is not right");
+    });
 };
 
 exports.signIn = (req, res) => {
