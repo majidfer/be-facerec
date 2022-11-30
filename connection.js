@@ -14,8 +14,6 @@ exports.db = knex({
   client: "pg",
   connection: {
     host: DATABASE_URL,
-    user: PGUSER,
-    password: PGPASSWORD,
-    database: PGDATABASE,
+    ssl: true,
   },
 });
