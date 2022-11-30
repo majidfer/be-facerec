@@ -13,7 +13,7 @@ const { PGUSER, PGPASSWORD, PGDATABASE, DATABASE_URL } = process.env;
 exports.db = knex({
   client: "pg",
   connection: {
-    host: DATABASE_URL,
+    connectionString: DATABASE_URL,
     ssl: true,
   },
 });
